@@ -1,41 +1,40 @@
 const Moves = require('../moves');
+const Movement = require('../movement');
 
 class AvoidHead {
   constructor(position, snakes) {
     this.position = position;
+    this.currentLength = 0;
     this.snakes = snakes;
   }
 
   avoid() {
-    let currentLength;
-    const snakesMap = this.snakes.reduce(this.reduceSnake(currentLength), []);
-    
+    const snakesMap = this.snakes.reduce(this.reduceSnake, []);
     const notMove = [];
     for (const snake of snakesMap) {
       this.badMove(notMove, snake);
     }
-
     return notMove;
   }
 
-  reduceSnake = currentLength => (agg, snake) => {
-      if (this.isMySnake(snake)) {
-        currentLength = snake.length;
-        return agg;
-      }
-      agg.push({
-        head: snake.head,
-        length: snake.length
-      });
+  reduceSnake = (agg, snake) => {
+    if (this.isMySnake(snake)) {
+      this.currentLength = snake.length;
       return agg;
     }
+    agg.push({
+      head: snake.head,
+      length: snake.length
+    });
+    return agg;
+  }
 
   isMySnake(snake) {
     return snake.head.x == this.position.x && snake.head.y == this.position.y;
   }
 
   badMove(notMove, snake) {
-    if (currentLength <= snake.length) {
+    if (this.currentLength <= snake.length) {
       if (this.isRight(snake.head)) {
         notMove.push(Moves.right);
       }
@@ -52,19 +51,27 @@ class AvoidHead {
   }
 
   isRight(partPosition) {
-    return partPosition.x - 1 == this.position.x + 1 && partPosition.y == this.position.y ;
+    const newPosition = Movement.right(this.position);
+    return this.isEqual(newPosition, Movement.up(partPosition)) || this.isEqual(newPosition, Movement.down(partPosition)) || this.isEqual(newPosition, Movement.left(partPosition));
   }
 
   isLeft(partPosition) {
-    return partPosition.x + 1 == this.position.x -1 && partPosition.y == this.position.y;
+    const newPosition = Movement.left(this.position);
+    return this.isEqual(newPosition, Movement.up(partPosition)) || this.isEqual(newPosition, Movement.down(partPosition)) || this.isEqual(newPosition, Movement.right(partPosition));
   }
 
   isAbove(partPosition) {
-    return partPosition.y - 1 == this.position.y + 1 && partPosition.x == this.position.x;
+    const newPosition = Movement.up(this.position);
+    return this.isEqual(newPosition, Movement.right(partPosition)) || this.isEqual(newPosition, Movement.down(partPosition)) || this.isEqual(newPosition, Movement.left(partPosition));
   }
 
   isBelow(partPosition) {
-    return partPosition.y + 1 == this.position.y -1 && partPosition.x == this.position.x;
+    const newPosition = Movement.down(this.position);
+    return this.isEqual(newPosition, Movement.up(partPosition)) || this.isEqual(newPosition, Movement.right(partPosition)) || this.isEqual(newPosition, Movement.left(partPosition));
+  }
+
+  isEqual(position1, position2) {
+    return position1.x == position2.x && position1.y == position2.y;
   }
 }
 

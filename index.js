@@ -27,7 +27,8 @@ app.post('/move', function (req, res) {
   res.json({
     move: Move(
         Avoid(head, board, req.body.board.snakes),
-        towardsFood.towards()
+        towardsFood.towards(),
+        id
       )
   });
 })
